@@ -2,7 +2,16 @@ from django.db import models
 
 
 class TypeOfService(models.Model):
-    type_of_service = models.CharField('Тип услуги',)
+    type_of_service = models.CharField(
+        'Тип услуги',
+        max_length=100,)
+
+
+class Service(models.Model):
+    type_of_service = models.ForeignKey(TypeOfService,
+                                        verbose_name='Тип услуги',
+                                        on_delete=models.PROTECT,
+                                        )
     time_to_work = models.PositiveIntegerField('время работ в днях')
     price = models.IntegerField('Цена услуги')
 
@@ -23,7 +32,7 @@ class Client(models.Model):
         verbose_name="Фамилия клиента",)
     master = models.BooleanField('является ли клиент мастером')
     customer = models.BooleanField('является ли клиент заказчиком')
-    master = models.ForeignKey(TypeOfService,
+    master = models.ForeignKey(Service,
                                on_delete=models.CASCADE,
                                related_name='Услуги'
                                )
