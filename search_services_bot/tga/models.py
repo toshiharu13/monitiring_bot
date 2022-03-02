@@ -14,22 +14,6 @@ class TypeOfService(models.Model):
         verbose_name_plural = 'Тип услуги'
 
 
-class Service(models.Model):
-    type_of_service = models.ForeignKey(TypeOfService,
-                                        verbose_name='Тип услуги',
-                                        on_delete=models.PROTECT,
-                                        )
-    time_to_work = models.PositiveIntegerField('время работ в днях')
-    price = models.IntegerField('Цена услуги')
-
-    def __str__(self):
-        return self.type_of_service__type_of_service
-
-    class Meta:
-        verbose_name = 'Предоставляемая услуга'
-        verbose_name_plural = 'Предоставляемые услуги'
-
-
 class Client(models.Model):
     id_telegtam = models.PositiveIntegerField(
         'id клиента',
@@ -46,8 +30,28 @@ class Client(models.Model):
         verbose_name="Фамилия клиента",)
     master = models.BooleanField('является ли клиент мастером')
     customer = models.BooleanField('является ли клиент заказчиком')
-    service = models.ForeignKey(
-        Service,
+
+
+    def __str__(self):
+        return f"{self.last_name} {self.first_name}"
+
+    class Meta:
+        verbose_name = "Клиент"
+        verbose_name_plural = "Клиенты"
+
+
+class Service(models.Model):
+    type_of_service = models.ForeignKey(
+        TypeOfService,
+        verbose_name='Тип услуги',
+        on_delete=models.PROTECT,)
+    time_to_work = models.PositiveIntegerField('время работ в днях')
+    price = models.IntegerField('Цена услуги')
+    description = models.TextField(
+        'Описание услуги',
+        default='Кратко об услуге')
+    master = models.ForeignKey(
+        Client,
         on_delete=models.CASCADE,
         related_name='Услуги',
         null=True,
@@ -56,8 +60,8 @@ class Client(models.Model):
     )
 
     def __str__(self):
-        return f"клиент {self.last_name} {self.first_name}"
+        return self.type_of_service.type_of_service
 
     class Meta:
-        verbose_name = "Клиент"
-        verbose_name_plural = "Клиенты"
+        verbose_name = 'Предоставляемая услуга'
+        verbose_name_plural = 'Предоставляемые услуги'
