@@ -6,6 +6,13 @@ class TypeOfService(models.Model):
         'Тип услуги',
         max_length=100,)
 
+    def __str__(self):
+        return self.type_of_service
+
+    class Meta:
+        verbose_name = 'Тип услуги'
+        verbose_name_plural = 'Тип услуги'
+
 
 class Service(models.Model):
     type_of_service = models.ForeignKey(TypeOfService,
@@ -14,6 +21,13 @@ class Service(models.Model):
                                         )
     time_to_work = models.PositiveIntegerField('время работ в днях')
     price = models.IntegerField('Цена услуги')
+
+    def __str__(self):
+        return self.type_of_service__type_of_service
+
+    class Meta:
+        verbose_name = 'Предоставляемая услуга'
+        verbose_name_plural = 'Предоставляемые услуги'
 
 
 class Client(models.Model):
@@ -32,13 +46,17 @@ class Client(models.Model):
         verbose_name="Фамилия клиента",)
     master = models.BooleanField('является ли клиент мастером')
     customer = models.BooleanField('является ли клиент заказчиком')
-    master = models.ForeignKey(Service,
-                               on_delete=models.CASCADE,
-                               related_name='Услуги'
-                               )
+    service = models.ForeignKey(
+        Service,
+        on_delete=models.CASCADE,
+        related_name='Услуги',
+        null=True,
+        blank=True,
+        verbose_name="Имя клиента",
+    )
 
     def __str__(self):
-        return f"клиент {self.last_name} {self.last_name}"
+        return f"клиент {self.last_name} {self.first_name}"
 
     class Meta:
         verbose_name = "Клиент"
