@@ -1,4 +1,5 @@
-import logging
+import json
+import textwrap
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
@@ -8,30 +9,79 @@ from telegram import (Bot, InlineKeyboardButton, InlineKeyboardMarkup)
 from telegram.ext import (CallbackQueryHandler, CommandHandler,
                           ConversationHandler, Filters, MessageHandler,
                           Updater)
+
 from telegram.utils.request import Request
+from tga.models import TypeOfService, Service
 
 
-CUSTOMER, = range(1)
+CUSTOMER, SERVICETYPE = range(2)
 
 
 def start(update, context):
-    update.message.reply_text('Превед! я ботяшка помогашка!')
+    chat_id = update.effective_chat.id
+    keyboard = []
+    message_text = textwrap.dedent = (f'''\
+    Твой ID - {chat_id}
+    Превед! я ботяшка  сервисы продавашка! 
+    если вдруг надоело, жахни /end 
+    и я пойду разберать дальше свои шуты''')
 
+    update.message.reply_text(message_text)
 
-def customer_view():
-    ...
-
-
-def cancel(update, _):
-    # определяем пользователя
-    user = update.message.from_user
-    # Пишем в журнал о том, что пользователь не разговорчивый
-    #logger.info("Пользователь %s отменил разговор.", user.first_name)
-    # Отвечаем на отказ поговорить
-    update.message.reply_text(
-        'Мое дело предложить - Ваше отказаться'
-        ' Будет скучно - пиши.',
+    keyboard.append(
+        [InlineKeyboardButton(text='customer', callback_data='customer'),]
     )
+
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    update.message.reply_text("выберите роль", reply_markup=reply_markup,)
+    return CUSTOMER
+
+
+def customer_view(update, context):
+    bot = context.bot
+    keyboard = []
+    all_types = TypeOfService.objects.all()
+
+    for service_type in all_types:
+        service_type = str(service_type)
+        keyboard.append([InlineKeyboardButton(
+            text=service_type, callback_data=str(service_type))])
+
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    bot.send_message(
+        chat_id=update.callback_query.from_user.id,
+        text='Выбирите услугу',
+        reply_markup=reply_markup,)
+
+    return SERVICETYPE
+
+
+def get_one_type_services(update, context):
+    bot = context.bot
+    type_of_service = update.callback_query.data
+    print(type_of_service)
+    print(type(type_of_service))
+    services = Service.objects.filter(type_of_service__type_of_service__contains=type_of_service)
+    print(services)
+    for service in services:
+        text = f'''\
+        Тип сервиса: {service.type_of_service}
+        Время работ в днях: {service.time_to_work}
+        Цена услугив рублях: {service.price}
+        Описание услуги: {service.description}
+        Имя мастера: {service.master}
+        Номер телефона: {service.master.phone_number}
+        '''
+        bot.send_message(chat_id=update.callback_query.from_user.id,
+                         text=text)
+
+
+
+
+def end(update, context):
+    message_text = f'''Заходи ещё! пойду разбиру чего'
+    Будет скучно - пиши.'''
+    update.message.reply_text(message_text)
     # Заканчиваем разговор.
     return ConversationHandler.END
 
@@ -55,11 +105,13 @@ class Command(BaseCommand):
 
         conv_handler = ConversationHandler(
                 entry_points=[CommandHandler("start", start)],
-                states={CUSTOMER: [CallbackQueryHandler(
-                    customer_view,
-                    pattern='\S')
-                    ]},
-                fallbacks=[CommandHandler("end", cancel)],
+                states={
+                    CUSTOMER: [
+                        CallbackQueryHandler(customer_view, pattern='\S',)],
+                    SERVICETYPE: [
+                        CallbackQueryHandler(get_one_type_services, pattern='\S',)]
+                },
+                fallbacks=[CommandHandler("end", end)],
             )
 
         updater.dispatcher.add_handler(conv_handler)

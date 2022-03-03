@@ -1,2 +1,4 @@
 environs==9.5.0
 python-telegram-bot==13.11
+phonenumbers==8.12.44
+django-phonenumber-field==6.1.0

@@ -4,8 +4,8 @@ from .models import TypeOfService, Service, Client
 
 @admin.register(Client)
 class ClientAdmin(admin.ModelAdmin):
-    list_display = ('last_name', 'first_name', 'master', 'customer')
-    list_filter = ('master', 'customer')
+    list_display = ('last_name', 'first_name', 'master')
+    list_filter = ('master',)
 
 
 @admin.register(TypeOfService)

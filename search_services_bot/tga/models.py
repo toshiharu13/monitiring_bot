@@ -1,4 +1,5 @@
 from django.db import models
+from phonenumber_field.modelfields import PhoneNumberField
 
 
 class TypeOfService(models.Model):
@@ -29,8 +30,7 @@ class Client(models.Model):
         default="",
         verbose_name="Фамилия клиента",)
     master = models.BooleanField('является ли клиент мастером')
-    customer = models.BooleanField('является ли клиент заказчиком')
-
+    phone_number = PhoneNumberField('номер телефона', blank=True)
 
     def __str__(self):
         return f"{self.last_name} {self.first_name}"
