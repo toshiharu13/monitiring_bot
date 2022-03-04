@@ -68,10 +68,10 @@ def customer_view(update, context):
 def get_one_type_services(update, context):
     bot = context.bot
     type_of_service = update.callback_query.data
-    print(type_of_service)
-    print(type(type_of_service))
+    #print(type_of_service)
+    #print(type(type_of_service))
     services = Service.objects.filter(type_of_service__type_of_service__contains=type_of_service)
-    print(services)
+    #print(services)
     for service in services:
         text = f'''\
         Тип сервиса: {service.type_of_service}
@@ -168,16 +168,39 @@ def creating_service(update, context):
 '''
     bot.send_message(chat_id=chat_id, text=text)
     #print(new_service_text)
+    new_service = save_service_to_bd(chat_id)
+    #print(new_service)
+
+    text = f'''\
+    Зарегестрирована услуга № {new_service.pk}
+    
+    Тип сервиса: {new_service.type_of_service}
+    Время работ в днях: {new_service.time_to_work}
+    Цена услугив рублях: {new_service.price}
+    Описание услуги: {new_service.description}
+    Имя мастера: {new_service.master}
+    Номер телефона: {new_service.master.phone_number}
+    '''
+    bot.send_message(chat_id=chat_id, text=text)
 
 
-def save_service_to_bd():
+def save_service_to_bd(chat_id):
     global new_service_type
     global new_service_time
     global new_service_price
     global new_service_text
 
+    type_of_service_fg = get_object_or_404(TypeOfService, type_of_service=new_service_type)
+    master_fg = get_object_or_404(Client, id_telegtam=chat_id)
 
+    new_service = Service.objects.get_or_create(
+        type_of_service=type_of_service_fg,
+        time_to_work=new_service_time,
+        price=new_service_price,
+        description=new_service_text,
+        master=master_fg)
 
+    return new_service[0]
 
 
 def end(update, context):
