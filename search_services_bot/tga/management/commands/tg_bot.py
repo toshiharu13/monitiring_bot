@@ -11,26 +11,35 @@ from telegram.ext import (CallbackQueryHandler, CommandHandler,
                           Updater)
 
 from telegram.utils.request import Request
-from tga.models import TypeOfService, Service
+from tga.models import TypeOfService, Service, Client
 
 
-CUSTOMER, SERVICETYPE = range(2)
+CUSTOMER, SERVICETYPE, REGTIME = range(3)
 
 
 def start(update, context):
     chat_id = update.effective_chat.id
+    #print(update)
     keyboard = []
     message_text = textwrap.dedent = (f'''\
     Твой ID - {chat_id}
+    
     Превед! я ботяшка  сервисы продавашка! 
     если вдруг надоело, жахни /end 
     и я пойду разберать дальше свои шуты''')
+
+    master_or_not = Client.objects.all().filter(id_telegtam__contains=chat_id)
+    if master_or_not:
+        #print('yes my master!')
+        keyboard.append([InlineKeyboardButton(
+            text='master', callback_data='master')])
 
     update.message.reply_text(message_text)
 
     keyboard.append(
         [InlineKeyboardButton(text='customer', callback_data='customer'),]
     )
+
 
     reply_markup = InlineKeyboardMarkup(keyboard)
     update.message.reply_text("выберите роль", reply_markup=reply_markup,)
@@ -76,6 +85,42 @@ def get_one_type_services(update, context):
                          text=text)
 
 
+def reg_service_type(update, context):
+    keyboard = []
+    bot = context.bot
+    chat_id = update.callback_query.from_user.id
+    text_type = f'''
+    Введите тип услуги
+    '''
+    all_types = TypeOfService.objects.all()
+
+    for service_type in all_types:
+        service_type = str(service_type)
+        keyboard.append([InlineKeyboardButton(
+            text=service_type, callback_data=str(service_type))])
+
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    bot.send_message(
+        chat_id=chat_id,
+        text='Выбирите тип услуги',
+        reply_markup=reply_markup,)
+
+    #print(update)
+    return REGTIME
+
+
+def reg_service_time(update, context):
+    global new_service_type
+    new_service_type = update.callback_query.data
+    bot = context.bot
+    chat_id = update.callback_query.from_user.id
+    text = f'''\
+     Выбран тип - {new_service_type}
+     введите время работ в днях
+     '''
+
+    bot.send_message(chat_id=chat_id, text=text)
+
 
 
 def end(update, context):
@@ -107,9 +152,13 @@ class Command(BaseCommand):
                 entry_points=[CommandHandler("start", start)],
                 states={
                     CUSTOMER: [
-                        CallbackQueryHandler(customer_view, pattern='\S',)],
+                        CallbackQueryHandler(customer_view, pattern='^'+'customer'+'$'),
+                        CallbackQueryHandler(reg_service_type, pattern='^master$'),
+                    ],
                     SERVICETYPE: [
-                        CallbackQueryHandler(get_one_type_services, pattern='\S',)]
+                        CallbackQueryHandler(get_one_type_services, pattern='\S',)],
+                    REGTIME: [
+                        CallbackQueryHandler(reg_service_time, pattern='\S',)],
                 },
                 fallbacks=[CommandHandler("end", end)],
             )
