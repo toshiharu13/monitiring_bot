@@ -14,7 +14,7 @@ from telegram.utils.request import Request
 from tga.models import TypeOfService, Service, Client
 
 
-CUSTOMER, SERVICETYPE, REGTIME, REGPRICE, REGTEXT, SAVESERVICE= range(6)
+CUSTOMER, SERVICETYPE, REGTIME, REGPRICE, REGTEXT, SAVESERVICE, MASTERVIEW= range(7)
 
 
 def start(update, context):
@@ -30,7 +30,6 @@ def start(update, context):
 
     master_or_not = Client.objects.all().filter(id_telegtam__contains=chat_id)
     if master_or_not:
-        #print('yes my master!')
         keyboard.append([InlineKeyboardButton(
             text='master', callback_data='master')])
 
@@ -203,6 +202,37 @@ def save_service_to_bd(chat_id):
     return new_service[0]
 
 
+def get_master_view(update, context):
+    keyboard = []
+    bot = context.bot
+    chat_id = update.callback_query.from_user.id
+    text_type = f'''
+        Выбирете операцию роли мастер,
+        '''
+
+    keyboard.append([InlineKeyboardButton(
+        text='Создание объявления', callback_data='newservice')])
+    keyboard.append([InlineKeyboardButton(
+        text='Просмотр объявлений', callback_data='oldservice')])
+
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    bot.send_message(
+        chat_id=chat_id,
+        text=text_type,
+        reply_markup=reply_markup, )
+
+    return MASTERVIEW
+
+
+def get_masters_services(update, context):
+    bot = context.bot
+    chat_id = update.callback_query.from_user.id
+    text = f'''
+            ХМ, АНДЕР КОНСТРАКШЕН!,
+            '''
+    bot.send_message(chat_id=chat_id, text=text)
+
+
 def end(update, context):
     message_text = f'''Заходи ещё! пойду разбиру чего'
     Будет скучно - пиши.'''
@@ -233,7 +263,13 @@ class Command(BaseCommand):
                 states={
                     CUSTOMER: [
                         CallbackQueryHandler(customer_view, pattern='^'+'customer'+'$'),
-                        CallbackQueryHandler(reg_service_type, pattern='^master$'),
+                        CallbackQueryHandler(get_master_view, pattern='^master$'),
+                    ],
+                    MASTERVIEW: [
+                        CallbackQueryHandler(reg_service_type,
+                                             pattern='^newservice$'),
+                        CallbackQueryHandler(get_masters_services,
+                                             pattern='^oldservice$'),
                     ],
                     SERVICETYPE: [
                         CallbackQueryHandler(get_one_type_services, pattern='\S',)],
