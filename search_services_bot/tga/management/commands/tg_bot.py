@@ -14,7 +14,7 @@ from telegram.utils.request import Request
 from tga.models import TypeOfService, Service, Client
 
 
-CUSTOMER, SERVICETYPE, REGTIME = range(3)
+CUSTOMER, SERVICETYPE, REGTIME, REGPRICE, REGTEXT, SAVESERVICE= range(6)
 
 
 def start(update, context):
@@ -90,6 +90,7 @@ def reg_service_type(update, context):
     bot = context.bot
     chat_id = update.callback_query.from_user.id
     text_type = f'''
+    Создание объявления,
     Введите тип услуги
     '''
     all_types = TypeOfService.objects.all()
@@ -102,7 +103,7 @@ def reg_service_type(update, context):
     reply_markup = InlineKeyboardMarkup(keyboard)
     bot.send_message(
         chat_id=chat_id,
-        text='Выбирите тип услуги',
+        text=text_type,
         reply_markup=reply_markup,)
 
     #print(update)
@@ -120,6 +121,62 @@ def reg_service_time(update, context):
      '''
 
     bot.send_message(chat_id=chat_id, text=text)
+
+    return REGPRICE
+
+
+def ger_service_price(update, context):
+    global new_service_time
+    new_service_time = update.message.text
+    bot = context.bot
+    #print(update.message.chat)
+    chat_id = update.message.chat.id
+    text = f'''\
+    ВВедено время работ - {new_service_time} дней
+    Введите цену услуги целыми числами
+    '''
+
+    bot.send_message(chat_id=chat_id, text=text)
+
+    return REGTEXT
+
+
+def reg_service_text(update, context):
+    global new_service_price
+    new_service_price = update.message.text
+    #print(new_service_price)
+    bot = context.bot
+    chat_id = update.message.chat.id
+    text = f'''\
+    Введена цена - {new_service_price} рублей
+    Введите описание вашей услуги
+'''
+    bot.send_message(chat_id=chat_id, text=text)
+    #print(update)
+    return SAVESERVICE
+
+
+def creating_service(update, context):
+    global new_service_text
+    new_service_text = update.message.text
+    chat_id = update.message.chat.id
+    bot = context.bot
+    text = f'''\
+    Введен текст:
+    {new_service_text}
+    обработка данных...
+'''
+    bot.send_message(chat_id=chat_id, text=text)
+    #print(new_service_text)
+
+
+def save_service_to_bd():
+    global new_service_type
+    global new_service_time
+    global new_service_price
+    global new_service_text
+
+
 
 
 
@@ -159,6 +216,12 @@ class Command(BaseCommand):
                         CallbackQueryHandler(get_one_type_services, pattern='\S',)],
                     REGTIME: [
                         CallbackQueryHandler(reg_service_time, pattern='\S',)],
+                    REGPRICE: [
+                        MessageHandler(Filters.text & ~Filters.command, ger_service_price)],
+                    REGTEXT: [
+                        MessageHandler(Filters.text & ~Filters.command, reg_service_text)],
+                    SAVESERVICE: [
+                        MessageHandler(Filters.text & ~Filters.command, creating_service)],
                 },
                 fallbacks=[CommandHandler("end", end)],
             )
