@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import TypeOfService, Service, Client
+
+from .models import Client, Service, TypeOfService
 
 
 @admin.register(Client)

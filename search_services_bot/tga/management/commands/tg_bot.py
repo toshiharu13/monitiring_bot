@@ -1,25 +1,20 @@
-import json
 import textwrap
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.shortcuts import get_object_or_404
 from environs import Env
-from telegram import (Bot, InlineKeyboardButton, InlineKeyboardMarkup)
+from telegram import Bot, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (CallbackQueryHandler, CommandHandler,
                           ConversationHandler, Filters, MessageHandler,
                           Updater)
-
-from telegram.utils.request import Request
-from tga.models import TypeOfService, Service, Client
-
+from tga.models import Client, Service, TypeOfService
 
 CUSTOMER, SERVICETYPE, REGTIME, REGPRICE, REGTEXT, SAVESERVICE, MASTERVIEW= range(7)
 
 
 def start(update, context):
     chat_id = update.effective_chat.id
-    #print(update)
     keyboard = []
     message_text = textwrap.dedent = (f'''\
     Твой ID - {chat_id}
@@ -38,7 +33,6 @@ def start(update, context):
     keyboard.append(
         [InlineKeyboardButton(text='customer', callback_data='customer'),]
     )
-
 
     reply_markup = InlineKeyboardMarkup(keyboard)
     update.message.reply_text("выберите роль", reply_markup=reply_markup,)
@@ -67,10 +61,9 @@ def customer_view(update, context):
 def get_one_type_services(update, context):
     bot = context.bot
     type_of_service = update.callback_query.data
-    #print(type_of_service)
-    #print(type(type_of_service))
-    services = Service.objects.filter(type_of_service__type_of_service__contains=type_of_service)
-    #print(services)
+    services = Service.objects.filter(
+        type_of_service__type_of_service__contains=type_of_service)
+
     for service in services:
         text = f'''\
         Тип сервиса: {service.type_of_service}
@@ -105,7 +98,6 @@ def reg_service_type(update, context):
         text=text_type,
         reply_markup=reply_markup,)
 
-    #print(update)
     return REGTIME
 
 
@@ -128,7 +120,6 @@ def ger_service_price(update, context):
     global new_service_time
     new_service_time = update.message.text
     bot = context.bot
-    #print(update.message.chat)
     chat_id = update.message.chat.id
     text = f'''\
     ВВедено время работ - {new_service_time} дней
@@ -143,7 +134,6 @@ def ger_service_price(update, context):
 def reg_service_text(update, context):
     global new_service_price
     new_service_price = update.message.text
-    #print(new_service_price)
     bot = context.bot
     chat_id = update.message.chat.id
     text = f'''\
@@ -151,7 +141,7 @@ def reg_service_text(update, context):
     Введите описание вашей услуги
 '''
     bot.send_message(chat_id=chat_id, text=text)
-    #print(update)
+
     return SAVESERVICE
 
 
@@ -166,9 +156,8 @@ def creating_service(update, context):
     обработка данных...
 '''
     bot.send_message(chat_id=chat_id, text=text)
-    #print(new_service_text)
+
     new_service = save_service_to_bd(chat_id)
-    #print(new_service)
 
     text = f'''\
     Зарегестрирована услуга № {new_service.pk}
@@ -189,7 +178,8 @@ def save_service_to_bd(chat_id):
     global new_service_price
     global new_service_text
 
-    type_of_service_fg = get_object_or_404(TypeOfService, type_of_service=new_service_type)
+    type_of_service_fg = get_object_or_404(
+        TypeOfService, type_of_service=new_service_type)
     master_fg = get_object_or_404(Client, id_telegtam=chat_id)
 
     new_service = Service.objects.get_or_create(
@@ -207,7 +197,7 @@ def get_master_view(update, context):
     bot = context.bot
     chat_id = update.callback_query.from_user.id
     text_type = f'''
-        Выбирете операцию роли мастер,
+        Выбирете операцию роли мастер
         '''
 
     keyboard.append([InlineKeyboardButton(
@@ -228,7 +218,7 @@ def get_masters_services(update, context):
     bot = context.bot
     chat_id = update.callback_query.from_user.id
     masters_services = Service.objects.all().filter(master__id_telegtam=chat_id)
-    print(masters_services)
+
     for service in masters_services:
         text = f'''\
             Зарегестрирована услуга № {service.pk}
@@ -246,8 +236,9 @@ def get_masters_services(update, context):
 def end(update, context):
     message_text = f'''Заходи ещё! пойду разбиру чего'
     Будет скучно - пиши.'''
+
     update.message.reply_text(message_text)
-    # Заканчиваем разговор.
+
     return ConversationHandler.END
 
 
@@ -272,8 +263,10 @@ class Command(BaseCommand):
                 entry_points=[CommandHandler("start", start)],
                 states={
                     CUSTOMER: [
-                        CallbackQueryHandler(customer_view, pattern='^'+'customer'+'$'),
-                        CallbackQueryHandler(get_master_view, pattern='^master$'),
+                        CallbackQueryHandler(
+                            customer_view, pattern='^'+'customer'+'$'),
+                        CallbackQueryHandler(
+                            get_master_view, pattern='^master$'),
                     ],
                     MASTERVIEW: [
                         CallbackQueryHandler(reg_service_type,
@@ -282,15 +275,19 @@ class Command(BaseCommand):
                                              pattern='^oldservice$'),
                     ],
                     SERVICETYPE: [
-                        CallbackQueryHandler(get_one_type_services, pattern='\S',)],
+                        CallbackQueryHandler(
+                            get_one_type_services, pattern='\S',)],
                     REGTIME: [
                         CallbackQueryHandler(reg_service_time, pattern='\S',)],
                     REGPRICE: [
-                        MessageHandler(Filters.text & ~Filters.command, ger_service_price)],
+                        MessageHandler(
+                            Filters.text & ~Filters.command, ger_service_price)],
                     REGTEXT: [
-                        MessageHandler(Filters.text & ~Filters.command, reg_service_text)],
+                        MessageHandler(
+                            Filters.text & ~Filters.command, reg_service_text)],
                     SAVESERVICE: [
-                        MessageHandler(Filters.text & ~Filters.command, creating_service)],
+                        MessageHandler(
+                            Filters.text & ~Filters.command, creating_service)],
                 },
                 fallbacks=[CommandHandler("end", end)],
             )
