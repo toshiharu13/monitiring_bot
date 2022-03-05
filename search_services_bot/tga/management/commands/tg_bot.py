@@ -227,10 +227,20 @@ def get_master_view(update, context):
 def get_masters_services(update, context):
     bot = context.bot
     chat_id = update.callback_query.from_user.id
-    text = f'''
-            ХМ, АНДЕР КОНСТРАКШЕН!,
+    masters_services = Service.objects.all().filter(master__id_telegtam=chat_id)
+    print(masters_services)
+    for service in masters_services:
+        text = f'''\
+            Зарегестрирована услуга № {service.pk}
+
+            Тип сервиса: {service.type_of_service}
+            Время работ в днях: {service.time_to_work}
+            Цена услугив рублях: {service.price}
+            Описание услуги: {service.description}
+            Имя мастера: {service.master}
+            Номер телефона: {service.master.phone_number}
             '''
-    bot.send_message(chat_id=chat_id, text=text)
+        bot.send_message(chat_id=chat_id, text=text)
 
 
 def end(update, context):
