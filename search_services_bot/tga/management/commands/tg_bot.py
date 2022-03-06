@@ -19,9 +19,9 @@ def start(update, context):
     message_text = textwrap.dedent = (f'''\
     Твой ID - {chat_id}
     
-    Превед! я ботяшка  сервисы продавашка! 
-    если вдруг надоело, жахни /end 
-    и я пойду разберать дальше свои шуты''')
+    Привет! Я бот рынка сервисов! 
+    Для окончания работы нажми /end 
+    ''')
 
     master_or_not = Client.objects.all().filter(id_telegtam__contains=chat_id)
     if master_or_not:
@@ -35,7 +35,7 @@ def start(update, context):
     )
 
     reply_markup = InlineKeyboardMarkup(keyboard)
-    update.message.reply_text("выберите роль", reply_markup=reply_markup,)
+    update.message.reply_text("Выберите роль", reply_markup=reply_markup,)
     return CUSTOMER
 
 
@@ -52,7 +52,7 @@ def customer_view(update, context):
     reply_markup = InlineKeyboardMarkup(keyboard)
     bot.send_message(
         chat_id=update.callback_query.from_user.id,
-        text='Выбирите услугу',
+        text='Выберите услугу',
         reply_markup=reply_markup,)
 
     return SERVICETYPE
@@ -68,7 +68,7 @@ def get_one_type_services(update, context):
         text = f'''\
         Тип сервиса: {service.type_of_service}
         Время работ в днях: {service.time_to_work}
-        Цена услугив рублях: {service.price}
+        Цена услуги в рублях: {service.price}
         Описание услуги: {service.description}
         Имя мастера: {service.master}
         Номер телефона: {service.master.phone_number}
@@ -83,7 +83,7 @@ def reg_service_type(update, context):
     chat_id = update.callback_query.from_user.id
     text_type = f'''
     Создание объявления,
-    Введите тип услуги
+    Введите тип услуги.
     '''
     all_types = TypeOfService.objects.all()
 
@@ -108,7 +108,7 @@ def reg_service_time(update, context):
     chat_id = update.callback_query.from_user.id
     text = f'''\
      Выбран тип - {new_service_type}
-     введите время работ в днях
+     Введите время работ в днях.
      '''
 
     bot.send_message(chat_id=chat_id, text=text)
@@ -122,8 +122,8 @@ def ger_service_price(update, context):
     bot = context.bot
     chat_id = update.message.chat.id
     text = f'''\
-    ВВедено время работ - {new_service_time} дней
-    Введите цену услуги целыми числами
+    Введено время работ - {new_service_time} дней
+    Введите цену услуги целыми числами.
     '''
 
     bot.send_message(chat_id=chat_id, text=text)
@@ -160,11 +160,11 @@ def creating_service(update, context):
     new_service = save_service_to_bd(chat_id)
 
     text = f'''\
-    Зарегестрирована услуга № {new_service.pk}
+    Зарегистрирована услуга № {new_service.pk}
     
     Тип сервиса: {new_service.type_of_service}
     Время работ в днях: {new_service.time_to_work}
-    Цена услугив рублях: {new_service.price}
+    Цена услуги в рублях: {new_service.price}
     Описание услуги: {new_service.description}
     Имя мастера: {new_service.master}
     Номер телефона: {new_service.master.phone_number}
@@ -197,7 +197,7 @@ def get_master_view(update, context):
     bot = context.bot
     chat_id = update.callback_query.from_user.id
     text_type = f'''
-        Выбирете операцию роли мастер
+        Выберете операцию роли мастер
         '''
 
     keyboard.append([InlineKeyboardButton(
@@ -221,11 +221,11 @@ def get_masters_services(update, context):
 
     for service in masters_services:
         text = f'''\
-            Зарегестрирована услуга № {service.pk}
+            Зарегистрирована услуга № {service.pk}
 
             Тип сервиса: {service.type_of_service}
             Время работ в днях: {service.time_to_work}
-            Цена услугив рублях: {service.price}
+            Цена услуги в рублях: {service.price}
             Описание услуги: {service.description}
             Имя мастера: {service.master}
             Номер телефона: {service.master.phone_number}
@@ -234,8 +234,7 @@ def get_masters_services(update, context):
 
 
 def end(update, context):
-    message_text = f'''Заходи ещё! пойду разбиру чего'
-    Будет скучно - пиши.'''
+    message_text = f'''Заходите ещё!'''
 
     update.message.reply_text(message_text)
 
