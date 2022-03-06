@@ -26,7 +26,15 @@ pip install -r requirements.txt
 ```dotenv
 TG_BOT_TOKEN = 'token of telegram bot'
 ```
-
+## How to run
+to run bot:
+```shell
+python3 manage.py tg_bot
+```
+to run django service:
+```shell
+python3 manage.py
+```
 
 ## Goal of project
 program was created for education purpose for [Devman](https://dvmn.org).
