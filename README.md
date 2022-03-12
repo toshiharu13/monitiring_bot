@@ -1,4 +1,5 @@
 # Bot for service market
+Проект, в статусе бета версии.
 [![Python](http://ForTheBadge.com/images/badges/made-with-python.svg)](https://www.python.org/)
 [![Django](https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=white)](https://www.djangoproject.com/)
 [![Telegram](https://img.shields.io/badge/Telegram-2CA5E0?style=for-the-badge&logo=telegram&logoColor=white)](https://telegram.org/)
